@@ -28,6 +28,8 @@ if [[ "$1" == "." ]]; then
     if GIT_ROOT=$(find_git_repo "$(pwd)"); then
         TARGET_PROJECT_PATH="$GIT_ROOT"
         SELF_INSTALL=true
+        
+        
         echo "🎯 Self-install mode: Found git repo at $GIT_ROOT"
     else
         echo "❌ No git repository found in current directory or parent directories"
@@ -66,6 +68,7 @@ if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
     show_help
     exit 0
 fi
+
 
 echo "🚀 CCPM Auto-Installer"
 echo "======================"
@@ -140,36 +143,42 @@ fi
 # Step 1: Copy ccpm structure
 echo "📁 Copying CCPM structure..."
 
-# Create directory structure
-mkdir -p .claude/{scripts/pm,commands/pm,agents,visions,epics,prds,plans/completed}
-
-# Copy all PM scripts
-if cp -r "$CCPM_REPO_PATH/.claude/scripts/pm"/* ".claude/scripts/pm/" 2>/dev/null; then
-    # Ensure scripts have execute permissions
-    chmod +x .claude/scripts/pm/*.sh 2>/dev/null || true
-    echo "  ✅ Scripts copied and made executable"
+# Check if source and target are the same (circular installation)
+if [[ "$(realpath "$CCPM_REPO_PATH" 2>/dev/null)" == "$(realpath "$TARGET_PROJECT_PATH" 2>/dev/null)" ]]; then
+    echo "  ⚠️  Source and target are the same directory - skipping file copy"
+    echo "  ℹ️  CCPM files are already in place"
 else
-    echo "  ❌ Failed to copy scripts from: $CCPM_REPO_PATH/.claude/scripts/pm/"
-    exit 1
+    # Create directory structure
+    mkdir -p .claude/{scripts/pm,commands/pm,agents,visions,epics,prds,plans/completed}
+
+    # Copy all PM scripts
+    if cp -r "$CCPM_REPO_PATH/.claude/scripts/pm"/* ".claude/scripts/pm/" 2>/dev/null; then
+        # Ensure scripts have execute permissions
+        chmod +x .claude/scripts/pm/*.sh 2>/dev/null || true
+        echo "  ✅ Scripts copied and made executable"
+    else
+        echo "  ❌ Failed to copy scripts from: $CCPM_REPO_PATH/.claude/scripts/pm/"
+        exit 1
+    fi
+
+    # Copy all PM commands  
+    if cp -r "$CCPM_REPO_PATH/.claude/commands/pm"/* ".claude/commands/pm/" 2>/dev/null; then
+        echo "  ✅ Commands copied"
+    else
+        echo "  ❌ Failed to copy commands from: $CCPM_REPO_PATH/.claude/commands/pm/"
+        exit 1
+    fi
+
+    # Copy agents
+    if cp -r "$CCPM_REPO_PATH/.claude/agents"/* ".claude/agents/" 2>/dev/null; then
+        echo "  ✅ Agents copied"
+    else
+        echo "  ❌ Failed to copy agents from: $CCPM_REPO_PATH/.claude/agents/"
+        exit 1
+    fi
 fi
 
-# Copy all PM commands  
-if cp -r "$CCPM_REPO_PATH/.claude/commands/pm"/* ".claude/commands/pm/" 2>/dev/null; then
-    echo "  ✅ Commands copied"
-else
-    echo "  ❌ Failed to copy commands from: $CCPM_REPO_PATH/.claude/commands/pm/"
-    exit 1
-fi
-
-# Copy agents
-if cp -r "$CCPM_REPO_PATH/.claude/agents"/* ".claude/agents/" 2>/dev/null; then
-    echo "  ✅ Agents copied"
-else
-    echo "  ❌ Failed to copy agents from: $CCPM_REPO_PATH/.claude/agents/"
-    exit 1
-fi
-
-echo "✅ CCPM structure copied"
+echo "✅ CCPM structure ready"
 
 # Step 2: Detect project type and create initial configuration
 echo ""
