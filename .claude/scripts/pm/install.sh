@@ -365,13 +365,77 @@ fi
 
 if [[ ! "$CREATE_VISION" =~ ^[Nn]$ ]]; then
     PROJECT_NAME=$(basename "$TARGET_PROJECT_PATH")
-    VISION_NAME=$(echo "$PROJECT_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+    DEFAULT_VISION_NAME=$(echo "$PROJECT_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
     
     echo ""
-    echo "Creating starter vision: $VISION_NAME"
+    echo "📋 Vision Setup"
+    echo "==============="
+    read -p "Vision name [$DEFAULT_VISION_NAME]: " VISION_NAME
+    if [[ -z "$VISION_NAME" ]]; then
+        VISION_NAME="$DEFAULT_VISION_NAME"
+    fi
     
-    echo "💡 Starter vision can be created after installation with:"
-    echo "   /pm:vision-new $VISION_NAME"
+    read -p "Vision statement (what will this product achieve?): " VISION_STATEMENT
+    
+    # Sanitize vision name for filename
+    VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+    VISION_PATH=".claude/visions/$VISION_FILE.md"
+    
+    echo ""
+    echo "🚀 Creating product vision: $VISION_NAME"
+    
+    # Create vision file
+    cat > "$VISION_PATH" << EOF
+# $VISION_NAME
+
+**Vision Type:** Product Vision
+**Created:** $(date '+%Y-%m-%d')
+**GitHub Issue:** _TBD_
+
+## Vision Statement
+
+$VISION_STATEMENT
+
+## Success Metrics
+
+- [ ] **Metric 1:** _Define measurable success criteria_
+- [ ] **Metric 2:** _What does success look like?_
+- [ ] **Metric 3:** _How will you measure progress?_
+
+## Strategic Context
+
+### Problem We're Solving
+_What problem does this vision address?_
+
+### Target Outcomes
+_What will be different when this vision is realized?_
+
+### Constraints & Considerations
+- **Technical:** _Any technical constraints or requirements_
+- **Business:** _Budget, timeline, or business constraints_
+- **User:** _User experience or accessibility requirements_
+
+## Related Epics
+
+_This section will be updated automatically as epics are linked to this vision._
+
+## Status
+
+**Current Phase:** Planning
+**Progress:** 0% Complete
+**Last Updated:** $(date '+%Y-%m-%d')
+
+---
+
+*This vision was created using Claude Code PM. Use \`/pm:vision-edit $VISION_FILE\` to modify.*
+EOF
+    
+    echo "✅ Vision created at: $VISION_PATH"
+    echo "💡 Edit your vision: /pm:vision-edit $VISION_FILE"
+else
+    echo ""
+    echo "💡 Starter vision can be created later with:"
+    echo "   /pm:vision-new <vision-name>"
 fi
 
 # Step 6: Final setup
