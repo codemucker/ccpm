@@ -384,6 +384,9 @@ if [[ ! "$CREATE_VISION" =~ ^[Nn]$ ]]; then
     echo ""
     echo "🚀 Creating product vision: $VISION_NAME"
     
+    # Ensure visions directory exists
+    mkdir -p .claude/visions
+    
     # Create vision file
     cat > "$VISION_PATH" << EOF
 # $VISION_NAME
