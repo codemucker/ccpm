@@ -256,7 +256,7 @@ if [[ -d "$EPICS_DIR" ]] && ls "$EPICS_DIR"/*.md >/dev/null 2>&1; then
             
             if [[ "$DRY_RUN" == "false" ]]; then
                 echo "🤖 Running AI vision matching for epic: $basename"
-                if "$SCRIPT_DIR/vision-match.sh" --epic "$basename" --auto >/dev/null 2>&1; then
+                if "$SCRIPT_DIR/vision-match.sh" --epic "$basename" >/dev/null 2>&1; then
                     LINKS_FIXED=$((LINKS_FIXED + 1))
                 fi
             fi
@@ -314,6 +314,4 @@ echo "   /pm:vision-tree              # View complete vision hierarchy"
 echo "   /pm:validate                 # Run full project validation"
 echo "   /pm:fix-all                  # Fix any remaining quality issues"
 
-<function_calls>
-<invoke name="TodoWrite">
-<parameter name="todos">[{"content": "Make vision system automatically detect and sync GitHub/local inconsistencies", "status": "completed", "activeForm": "Building smart vision sync system"}, {"content": "Add proper GitHub label setup for project management", "status": "completed", "activeForm": "Setting up GitHub label system"}, {"content": "Create AI-powered issue detection and auto-fix", "status": "in_progress", "activeForm": "Building AI issue detection"}]
+exit 0
