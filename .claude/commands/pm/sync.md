@@ -1,82 +1,58 @@
----
-allowed-tools: Bash, Read, Write, LS
----
+# PM Intelligent Sync System
 
-# Sync
-
-Full bidirectional sync between local and GitHub.
+Auto-detects and fixes GitHub/local vision inconsistencies using AI. Adapts to your team's preferred workflow automatically.
 
 ## Usage
-```
-/pm:sync [epic_name]
-```
 
-If epic_name provided, sync only that epic. Otherwise sync all.
-
-## Instructions
-
-### 1. Pull from GitHub
-
-Get current state of all issues:
 ```bash
-# Get all epic and task issues
-gh issue list --label "epic" --limit 1000 --json number,title,state,body,labels,updatedAt
-gh issue list --label "task" --limit 1000 --json number,title,state,body,labels,updatedAt
+/pm:sync                    # Auto-detect and fix all inconsistencies
+/pm:sync --dry-run          # Show what would be synced without making changes
+/pm:sync --github-first     # Prioritize GitHub as source of truth
+/pm:sync --local-first      # Prioritize local files as source of truth
 ```
 
-### 2. Update Local from GitHub
+## What It Detects and Fixes
 
-For each GitHub issue:
-- Find corresponding local file by issue number
-- Compare states:
-  - If GitHub state newer (updatedAt > local updated), update local
-  - If GitHub closed but local open, close local
-  - If GitHub reopened but local closed, reopen local
-- Update frontmatter to match GitHub state
+### Workflow Detection
+- **GitHub-first teams**: More issues than local files → syncs issues to local
+- **Local-first teams**: More local files → creates missing GitHub issues  
+- **Balanced teams**: Uses AI to intelligently resolve conflicts
 
-### 3. Push Local to GitHub
+### Automatic Fixes
+- ✅ **Missing local files**: Creates from GitHub issues
+- ✅ **Missing GitHub issues**: Creates from local vision files
+- ✅ **Broken links**: Fixes vision ↔ epic ↔ issue relationships
+- ✅ **Wrong issue numbers**: Updates local files with correct GitHub links
+- ✅ **Missing labels**: Creates standard PM label system
+- ✅ **Orphaned epics**: Uses AI to match epics to appropriate visions
 
-For each local task/epic:
-- If has GitHub URL but GitHub issue not found, it was deleted - mark local as archived
-- If no GitHub URL, create new issue (like epic-sync)
-- If local updated > GitHub updatedAt, push changes:
-  ```bash
-  gh issue edit {number} --body-file {local_file}
-  ```
+### AI-Powered Intelligence
+- Detects team workflow preferences automatically
+- Uses vision-matching AI for orphaned epics
+- Intelligently resolves content conflicts
+- Maintains strategic alignment across all artifacts
 
-### 4. Handle Conflicts
+## Standard Label System
 
-If both changed (local and GitHub updated since last sync):
-- Show both versions
-- Ask user: "Local and GitHub both changed. Keep: (local/github/merge)?"
-- Apply user's choice
+Automatically creates and maintains:
+- `vision` / `sub-vision` - Strategic alignment
+- `epic` / `story` / `task` - Work breakdown hierarchy
+- `priority::high|medium|low` - Prioritization levels
 
-### 5. Update Sync Timestamps
+## Examples
 
-Update all synced files with last_sync timestamp.
+```bash
+# Daily sync - fixes everything automatically
+/pm:sync
 
-### 6. Output
+# Check what needs fixing without making changes
+/pm:sync --dry-run
 
-```
-🔄 Sync Complete
+# Force GitHub as authoritative source
+/pm:sync --github-first
 
-Pulled from GitHub:
-  Updated: {count} files
-  Closed: {count} issues
-  
-Pushed to GitHub:
-  Updated: {count} issues
-  Created: {count} new issues
-  
-Conflicts resolved: {count}
-
-Status:
-  ✅ All files synced
-  {or list any sync failures}
+# Prioritize local files over GitHub
+/pm:sync --local-first
 ```
 
-## Important Notes
-
-Follow `/rules/github-operations.md` for GitHub commands.
-Follow `/rules/frontmatter-operations.md` for local updates.
-Always backup before sync in case of issues.
+Perfect for keeping vision-driven development synchronized across GitHub and local development environments.
