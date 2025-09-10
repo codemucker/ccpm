@@ -434,6 +434,54 @@ _This section will be updated automatically as epics are linked to this vision._
 EOF
     
     echo "✅ Vision created at: $VISION_PATH"
+    
+    # Ask about creating GitHub issue
+    if command -v gh >/dev/null 2>&1; then
+        read -p "🔗 Create GitHub issue for this vision? (y/N): " CREATE_GH_ISSUE
+        if [[ "$CREATE_GH_ISSUE" =~ ^[Yy]$ ]]; then
+            echo "🚀 Creating GitHub issue..."
+            
+            ISSUE_BODY=$(cat << EOI
+## Vision Overview
+
+This is a product vision that provides strategic direction for development efforts.
+
+**📁 Local File:** \`.claude/visions/$VISION_FILE.md\`
+
+## Vision Statement
+
+$VISION_STATEMENT
+
+## Purpose
+
+This issue tracks the overall progress and discussion for this vision. Individual epics will reference this issue to maintain strategic alignment.
+
+## Related Work
+
+- [ ] Epic tracking and progress updates will appear here
+- [ ] Cross-references will be maintained automatically by ccpm
+
+---
+
+🤖 *This issue was created by Claude Code PM vision system*
+EOI
+)
+            
+            ISSUE_NUMBER=$(gh issue create \
+                --title "Vision: $VISION_NAME" \
+                --body "$ISSUE_BODY" \
+                --label "vision" \
+                | grep -o '#[0-9]*' | tr -d '#')
+            
+            if [[ -n "$ISSUE_NUMBER" ]]; then
+                echo "✅ GitHub issue #$ISSUE_NUMBER created"
+                # Update the vision file with GitHub issue number
+                sed -i "s/**GitHub Issue:** _TBD_/**GitHub Issue:** #$ISSUE_NUMBER/" "$VISION_PATH"
+                echo "🔗 Vision linked to GitHub issue #$ISSUE_NUMBER"
+            fi
+        fi
+    fi
+    
     echo "💡 Edit your vision: /pm:vision-edit $VISION_FILE"
     
     # Ask about sub-visions
