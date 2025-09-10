@@ -42,7 +42,12 @@ Do not bother the user with preflight checks progress ("I'm not going to ..."). 
    - Only proceed with explicit 'yes' confirmation
    - If user says no, suggest: "View existing epic with: /pm:epic-show $ARGUMENTS"
 
-5. **Verify directory permissions:**
+5. **Check for existing visions (optional but recommended):**
+   - Check if `.claude/visions/` directory exists and has vision files
+   - If no visions exist, inform user: "💡 No product visions found. Consider creating one first with: /pm:vision-new <vision-name>"
+   - If visions exist, remind user they'll need to describe vision alignment in the epic
+
+6. **Verify directory permissions:**
    - Ensure `.claude/epics/` directory exists or can be created
    - If cannot create, tell user: "❌ Cannot create epic directory. Please check permissions."
 
@@ -73,9 +78,17 @@ created: [Current ISO date/time]
 progress: 0%
 prd: .claude/prds/$ARGUMENTS.md
 github: [Will be updated when synced to GitHub]
+vision-support: [Describe how this epic supports the product vision]
+github-vision-link: [Will be auto-populated by vision matching]
 ---
 
 # Epic: $ARGUMENTS
+
+## Vision Alignment
+
+**Vision-Support:** "[Describe how this epic advances the product vision or strategic theme]"
+
+**GitHub-Vision-Link:** _TBD_ (will be populated by `/pm:vision-match --epic $ARGUMENTS`)
 
 ## Overview
 Brief technical summary of the implementation approach
@@ -135,6 +148,8 @@ High-level task categories that will be created:
 - **progress**: Always start with "0%" for new epics
 - **prd**: Reference the source PRD file path
 - **github**: Leave placeholder text - will be updated during sync
+- **vision-support**: Describe how this epic supports the overall product vision (user should fill this)
+- **github-vision-link**: Leave placeholder - will be populated by vision matching system
 
 ### 5. Output Location
 Create the directory structure if it doesn't exist:
@@ -158,7 +173,11 @@ After successfully creating the epic:
    - Number of task categories identified
    - Key architecture decisions
    - Estimated effort
-3. Suggest next step: "Ready to break down into tasks? Run: /pm:epic-decompose $ARGUMENTS"
+   - Vision alignment status (filled or needs attention)
+3. **Vision Integration (recommended):**
+   - If visions exist, suggest: "🔗 Link to vision: /pm:vision-match --epic $ARGUMENTS"
+   - If no visions exist, suggest: "💡 Create product vision first: /pm:vision-new <vision-name>"
+4. Suggest next step: "Ready to break down into tasks? Run: /pm:epic-decompose $ARGUMENTS"
 
 ## Error Recovery
 

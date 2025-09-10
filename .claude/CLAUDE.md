@@ -63,3 +63,55 @@ Using the test-runner agent ensures:
 - NO OVER-ENGINEERING - Don't add unnecessary abstractions, factory patterns, or middleware when simple functions would work. Don't think "enterprise" when you need "working"
 - NO MIXED CONCERNS - Don't put validation logic inside API handlers, database queries inside UI components, etc. instead of proper separation
 - NO RESOURCE LEAKS - Don't forget to close database connections, clear timeouts, remove event listeners, or clean up file handles
+
+## QUALITY ENFORCEMENT:
+
+### Automatic Quality Checks
+- Always run `/pm:self-check` before completing major tasks
+- Use quality-guardian agent for code review enforcement
+- Apply zero-tolerance for quality violations
+- Block progression on any cheat pattern detection
+
+### Code Quality Standards (SOLID + More)
+- **SOLID Principles**: Single responsibility, Open/closed, Liskov substitution, Interface segregation, Dependency inversion
+- **DRY**: Don't repeat yourself - eliminate code duplication  
+- **KISS**: Keep it simple - favor simplicity over cleverness
+- **ROCO**: Readable, Optimized, Consistent, Organized code
+- **POLA**: Principle of least astonishment - code behaves as expected
+- **YAGNI**: You aren't gonna need it - don't over-engineer
+- **CLEAN**: Clear, Logical, Efficient, Accessible, Named appropriately
+
+### Test Quality Standards
+- **GIVEN-WHEN-THEN**: Structure tests with clear setup, action, and verification
+- **FIRST**: Fast, Independent, Repeatable, Self-validating, Timely tests
+- **MEANINGFUL**: Test behavior not implementation, with relevant assertions
+- **NO CHEATING**: Tests must verify real behavior, not fake responses
+
+### Cheat Pattern Detection
+Never implement these patterns:
+- Hardcoded responses that should be computed
+- Keyword-based fake intelligence systems
+- Mock/stub implementations in production code
+- Random/time-based responses masking hardcoded logic
+- Early returns with fake values
+- Debug modes in production code
+- Bypass conditions skipping real processing
+- TODO/FIXME in production code
+- Caller-dependent behavior variations
+- Lookup tables masquerading as complex logic
+
+### Validation Requirements
+- All linting must pass (zero tolerance)
+- All tests must pass with meaningful results
+- All builds must succeed without errors
+- Applications must start and run correctly
+- End-to-end functionality must be verifiable
+- All claims must be verified with real execution
+
+## SELF-MONITORING:
+- Apply same quality standards to your own code
+- Run cheat detection on your implementations  
+- Verify all your claims with actual execution
+- Use quality-guardian agent for self-review
+- Document and fix any issues immediately
+- Never commit code that doesn't meet standards
