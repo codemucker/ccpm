@@ -432,6 +432,95 @@ EOF
     
     echo "✅ Vision created at: $VISION_PATH"
     echo "💡 Edit your vision: /pm:vision-edit $VISION_FILE"
+    
+    # Ask about sub-visions
+    echo ""
+    read -p "🎯 Create sub-visions for strategic themes? (y/N): " CREATE_SUBVISIONS
+    
+    if [[ "$CREATE_SUBVISIONS" =~ ^[Yy]$ ]]; then
+        echo ""
+        echo "📋 Sub-Vision Setup"
+        echo "==================="
+        echo "Sub-visions help break down your product vision into strategic themes."
+        echo "Common examples: user-experience, technical-architecture, business-growth"
+        echo ""
+        
+        SUB_VISION_COUNT=1
+        while true; do
+            read -p "Sub-vision #$SUB_VISION_COUNT name (or press Enter to finish): " SUB_VISION_NAME
+            if [[ -z "$SUB_VISION_NAME" ]]; then
+                break
+            fi
+            
+            read -p "How does '$SUB_VISION_NAME' support the main vision?: " SUB_VISION_STATEMENT
+            
+            # Sanitize sub-vision name for filename
+            SUB_VISION_FILE=$(echo "$SUB_VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+            SUB_VISION_PATH=".claude/visions/$SUB_VISION_FILE.md"
+            
+            echo "🚀 Creating sub-vision: $SUB_VISION_NAME"
+            
+            # Create sub-vision file
+            cat > "$SUB_VISION_PATH" << EOF
+# $SUB_VISION_NAME
+
+**Vision Type:** Sub-Vision
+**Parent Vision:** $VISION_FILE
+**Created:** $(date '+%Y-%m-%d')
+**GitHub Issue:** _TBD_
+
+## Vision Statement
+
+$SUB_VISION_STATEMENT
+
+## Success Metrics
+
+- [ ] **Metric 1:** _Define measurable success criteria_
+- [ ] **Metric 2:** _What does success look like?_
+- [ ] **Metric 3:** _How will you measure progress?_
+
+## Strategic Context
+
+### Problem We're Solving
+_What problem does this vision address?_
+
+### Target Outcomes
+_What will be different when this vision is realized?_
+
+### Constraints & Considerations
+- **Technical:** _Any technical constraints or requirements_
+- **Business:** _Budget, timeline, or business constraints_
+- **User:** _User experience or accessibility requirements_
+
+## Alignment with Parent Vision
+
+$SUB_VISION_STATEMENT
+
+## Related Epics
+
+_This section will be updated automatically as epics are linked to this vision._
+
+## Status
+
+**Current Phase:** Planning
+**Progress:** 0% Complete
+**Last Updated:** $(date '+%Y-%m-%d')
+
+---
+
+*This vision was created using Claude Code PM. Use \`/pm:vision-edit $SUB_VISION_FILE\` to modify.*
+EOF
+            
+            echo "✅ Sub-vision created at: $SUB_VISION_PATH"
+            SUB_VISION_COUNT=$((SUB_VISION_COUNT + 1))
+            echo ""
+        done
+        
+        if [[ $SUB_VISION_COUNT -gt 1 ]]; then
+            echo "✅ Created $((SUB_VISION_COUNT - 1)) sub-vision(s)"
+            echo "💡 View your vision hierarchy: /pm:vision-tree"
+        fi
+    fi
 else
     echo ""
     echo "💡 Starter vision can be created later with:"
