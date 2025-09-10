@@ -1,0 +1,12 @@
+# Project Detection Cache Entry for: /home/user/workspace/codemucker/ccpm
+PROJECT_TYPES=( )
+LANGUAGES=( )
+BUILD_TOOLS=( )
+TEST_FRAMEWORKS=( )
+LINT_TOOLS=( )
+JAVA_VERSION=""
+KOTLIN_VERSION=""
+GRADLE_VERSION=""
+DETECTED_AT="2025-09-10T17:44:02+10:00"
+PROJECT_PATH="/home/user/workspace/codemucker/ccpm"
+

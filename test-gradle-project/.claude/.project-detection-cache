@@ -1,0 +1,12 @@
+# Project Detection Cache Entry for: /home/user/workspace/codemucker/ccpm/test-gradle-project
+PROJECT_TYPES=(gradle kotlin java spring-boot )
+LANGUAGES=(kotlin java )
+BUILD_TOOLS=(gradle )
+TEST_FRAMEWORKS=(junit )
+LINT_TOOLS=(ktlint detekt )
+JAVA_VERSION="17"
+KOTLIN_VERSION="1.9.0"
+GRADLE_VERSION="8.2.1"
+DETECTED_AT="2025-09-10T17:44:20+10:00"
+PROJECT_PATH="/home/user/workspace/codemucker/ccpm/test-gradle-project"
+

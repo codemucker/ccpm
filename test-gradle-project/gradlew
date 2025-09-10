@@ -1,0 +1,6 @@
+#!/bin/sh
+# Mock gradlew for testing
+echo "Gradle 8.2.1"
+echo ""
+echo "Build time:   2023-07-03 17:32:17 UTC"
+echo "Revision:     abc123"
