@@ -93,11 +93,15 @@ fi
 
 cd "$TARGET_PROJECT_PATH"
 
-# Check if already installed
+# Check if already installed (simple check)
 ALREADY_INSTALLED=false
-if [[ -d ".claude/scripts/pm" ]] && [[ -f ".claude/scripts/pm/help.sh" ]]; then
+
+echo "🔍 Checking for existing CCPM installation..."
+
+# Simple check - if help.sh and vision-new.sh both exist, consider it installed
+if [[ -f ".claude/scripts/pm/help.sh" ]] && [[ -f ".claude/scripts/pm/vision-new.sh" ]] && [[ -f ".claude/commands/pm/vision-new.md" ]]; then
     ALREADY_INSTALLED=true
-    echo "⚠️  CCPM appears to already be installed."
+    echo "✅ CCPM appears to already be installed."
     echo ""
     
     if [[ "$SELF_INSTALL" == "true" ]]; then
@@ -111,7 +115,14 @@ if [[ -d ".claude/scripts/pm" ]] && [[ -f ".claude/scripts/pm/help.sh" ]]; then
         echo ""
         echo "🔄 Updating existing installation..."
     fi
+elif [[ -f ".claude/scripts/pm/help.sh" ]] || [[ -d ".claude/scripts/pm" ]]; then
+    echo "⚠️  Partial CCPM installation detected."
+    echo "   This suggests a previous installation failed or was incomplete."
+    echo "   Proceeding with full installation to fix missing files..."
+    echo ""
 fi
+
+echo "🔧 Proceeding with installation..."
 
 # Confirmation for new installs (unless self-install)
 if [[ "$ALREADY_INSTALLED" == "false" ]] && [[ "$SELF_INSTALL" != "true" ]]; then
@@ -134,7 +145,9 @@ mkdir -p .claude/{scripts/pm,commands/pm,agents,visions,epics,prds,plans/complet
 
 # Copy all PM scripts
 if cp -r "$CCPM_REPO_PATH/.claude/scripts/pm"/* ".claude/scripts/pm/" 2>/dev/null; then
-    echo "  ✅ Scripts copied"
+    # Ensure scripts have execute permissions
+    chmod +x .claude/scripts/pm/*.sh 2>/dev/null || true
+    echo "  ✅ Scripts copied and made executable"
 else
     echo "  ❌ Failed to copy scripts from: $CCPM_REPO_PATH/.claude/scripts/pm/"
     exit 1
@@ -348,12 +361,8 @@ if [[ ! "$CREATE_VISION" =~ ^[Nn]$ ]]; then
     echo ""
     echo "Creating starter vision: $VISION_NAME"
     
-    if .claude/scripts/pm/vision-new.sh "$VISION_NAME" </dev/null 2>/dev/null; then
-        echo "✅ Starter vision created: $VISION_NAME"
-    else
-        echo "⚠️  Could not auto-create vision. Create manually with:"
-        echo "   /pm:vision-new $VISION_NAME"
-    fi
+    echo "💡 Starter vision can be created after installation with:"
+    echo "   /pm:vision-new $VISION_NAME"
 fi
 
 # Step 6: Final setup
