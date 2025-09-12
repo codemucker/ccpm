@@ -6,7 +6,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 VISIONS_DIR="$PROJECT_ROOT/.claude/visions"
 
 # Ensure visions directory exists
@@ -46,33 +46,21 @@ if [[ "$IS_SUB_VISION" == "true" ]]; then
     VISION_PATH="$VISIONS_DIR/$VISION_FILE.md"
 else
     # Product visions go at project root
-    if [[ -f "$PROJECT_ROOT/VISION.md" ]]; then
-        # If VISION.md exists, create named variant
-        VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
-        VISION_PATH="$PROJECT_ROOT/VISION-$VISION_FILE.md"
-        VISION_FILE="VISION-$VISION_FILE"  # Update for tracking
-    else
-        # Use primary VISION.md
-        VISION_PATH="$PROJECT_ROOT/VISION.md"
-        VISION_FILE="VISION"
-    fi
-fi
-
-if [[ -f "$VISION_PATH" ]]; then
-    echo "❌ Vision '$VISION_NAME' already exists at: $VISION_PATH"
-    exit 1
+    # Always default to VISION.md - we'll handle existing files separately
+    VISION_PATH="$PROJECT_ROOT/VISION.md"
+    VISION_FILE="VISION"
 fi
 
 # Check for existing vision files that need CCPM enhancement
 EXISTING_VISION=""
 for candidate in "$PROJECT_ROOT/VISION.md" "$PROJECT_ROOT/vision.md" "$PROJECT_ROOT/Vision.md"; do
-    if [[ -f "$candidate" ]] && [[ "$candidate" != "$VISION_PATH" ]]; then
+    if [[ -f "$candidate" ]]; then
         EXISTING_VISION="$candidate"
         break
     fi
 done
 
-# Offer to enhance existing vision if found and we're not already using it
+# Offer to enhance existing vision if found and we're not creating a sub-vision
 if [[ -n "$EXISTING_VISION" ]] && [[ ! "$IS_SUB_VISION" == "true" ]]; then
     echo "🔍 Found existing vision file: $(basename "$EXISTING_VISION")"
     echo ""
@@ -133,6 +121,23 @@ EOF
         
         # Skip template creation since we enhanced existing content
         SKIP_TEMPLATE=true
+    else
+        # User declined to enhance existing, create new named version
+        VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+        VISION_PATH="$PROJECT_ROOT/VISION-$VISION_FILE.md"
+        VISION_FILE="VISION-$VISION_FILE"
+        
+        # Check if this new path already exists
+        if [[ -f "$VISION_PATH" ]]; then
+            echo "❌ Vision '$VISION_NAME' already exists at: $VISION_PATH"
+            exit 1
+        fi
+    fi
+else
+    # No existing vision found or this is a sub-vision, check for conflicts
+    if [[ -f "$VISION_PATH" ]]; then
+        echo "❌ Vision '$VISION_NAME' already exists at: $VISION_PATH"
+        exit 1
     fi
 fi
 
@@ -163,7 +168,11 @@ if [[ "$IS_SUB_VISION" == "true" ]]; then
     fi
 fi
 
-echo "🚀 Creating ${IS_SUB_VISION:+sub-}vision: $VISION_NAME"
+if [[ "$IS_SUB_VISION" == "true" ]]; then
+    echo "🚀 Creating sub-vision: $VISION_NAME"
+else
+    echo "🚀 Creating vision: $VISION_NAME"
+fi
 
 # Create vision template (unless we imported existing content)
 if [[ "$SKIP_TEMPLATE" != "true" ]]; then
