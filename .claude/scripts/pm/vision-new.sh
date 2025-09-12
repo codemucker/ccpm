@@ -36,13 +36,104 @@ if [[ "$2" == "--sub" ]]; then
     IS_SUB_VISION=true
 fi
 
-# Sanitize vision name for filename
-VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
-VISION_PATH="$VISIONS_DIR/$VISION_FILE.md"
+# Determine vision file location
+# For product visions: put at project root as VISION.md (or VISION-{name}.md if multiple)
+# For sub-visions: put in .claude/visions/ directory
+
+if [[ "$IS_SUB_VISION" == "true" ]]; then
+    # Sub-visions go in .claude/visions/
+    VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+    VISION_PATH="$VISIONS_DIR/$VISION_FILE.md"
+else
+    # Product visions go at project root
+    if [[ -f "$PROJECT_ROOT/VISION.md" ]]; then
+        # If VISION.md exists, create named variant
+        VISION_FILE=$(echo "$VISION_NAME" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')
+        VISION_PATH="$PROJECT_ROOT/VISION-$VISION_FILE.md"
+        VISION_FILE="VISION-$VISION_FILE"  # Update for tracking
+    else
+        # Use primary VISION.md
+        VISION_PATH="$PROJECT_ROOT/VISION.md"
+        VISION_FILE="VISION"
+    fi
+fi
 
 if [[ -f "$VISION_PATH" ]]; then
     echo "❌ Vision '$VISION_NAME' already exists at: $VISION_PATH"
     exit 1
+fi
+
+# Check for existing vision files that need CCPM enhancement
+EXISTING_VISION=""
+for candidate in "$PROJECT_ROOT/VISION.md" "$PROJECT_ROOT/vision.md" "$PROJECT_ROOT/Vision.md"; do
+    if [[ -f "$candidate" ]] && [[ "$candidate" != "$VISION_PATH" ]]; then
+        EXISTING_VISION="$candidate"
+        break
+    fi
+done
+
+# Offer to enhance existing vision if found and we're not already using it
+if [[ -n "$EXISTING_VISION" ]] && [[ ! "$IS_SUB_VISION" == "true" ]]; then
+    echo "🔍 Found existing vision file: $(basename "$EXISTING_VISION")"
+    echo ""
+    read -p "🔄 Enhance this file with CCPM metadata? (y/n): " ENHANCE_VISION
+    
+    if [[ "$ENHANCE_VISION" =~ ^[Yy]$ ]]; then
+        echo "📥 Enhancing existing vision..."
+        
+        # If we're creating VISION.md and it already exists, enhance in place
+        if [[ "$VISION_PATH" == "$PROJECT_ROOT/VISION.md" ]]; then
+            VISION_PATH="$EXISTING_VISION"
+        else
+            # Copy to our target location
+            cp "$EXISTING_VISION" "$VISION_PATH"
+        fi
+        
+        # Add CCPM metadata if not already present
+        if ! grep -q "**Vision Type:**" "$VISION_PATH"; then
+            # Create temp file with metadata header
+            TEMP_FILE=$(mktemp)
+            
+            # Extract title if present
+            TITLE=$(grep "^# " "$VISION_PATH" | head -1 | sed 's/^# //' || echo "$VISION_NAME")
+            
+            # Write enhanced header
+            cat > "$TEMP_FILE" << EOF
+# $TITLE
+
+**Vision Type:** Product Vision
+**Created:** $(date '+%Y-%m-%d')
+**GitHub Issue:** _TBD_
+**Enhanced from:** $(basename "$EXISTING_VISION")
+
+EOF
+            
+            # Append original content (skip original title if it exists)
+            if grep -q "^# " "$VISION_PATH"; then
+                tail -n +2 "$VISION_PATH" >> "$TEMP_FILE"
+            else
+                cat "$VISION_PATH" >> "$TEMP_FILE"
+            fi
+            
+            # Add CCPM footer if not present
+            if ! grep -q "Claude Code PM" "$TEMP_FILE"; then
+                cat >> "$TEMP_FILE" << EOF
+
+---
+
+*This vision was enhanced using Claude Code PM. Use \`/pm:vision-edit $VISION_FILE\` to modify.*
+EOF
+            fi
+            
+            # Replace original with enhanced version
+            mv "$TEMP_FILE" "$VISION_PATH"
+        fi
+        
+        echo "✅ Vision enhanced at: $VISION_PATH"
+        
+        # Skip template creation since we enhanced existing content
+        SKIP_TEMPLATE=true
+    fi
 fi
 
 # Check if this is a sub-vision and we need a parent
@@ -74,7 +165,8 @@ fi
 
 echo "🚀 Creating ${IS_SUB_VISION:+sub-}vision: $VISION_NAME"
 
-# Create vision template
+# Create vision template (unless we imported existing content)
+if [[ "$SKIP_TEMPLATE" != "true" ]]; then
 cat > "$VISION_PATH" << EOF
 # $VISION_NAME
 
@@ -126,6 +218,20 @@ _This section will be updated automatically as epics are linked to this vision._
 EOF
 
 echo "✅ Vision created at: $VISION_PATH"
+else
+echo "✅ Vision ready at: $VISION_PATH"
+fi
+
+# Create symlink in .claude/visions/ for CCPM tracking (for product visions at root)
+if [[ ! "$IS_SUB_VISION" == "true" ]] && [[ "$VISION_PATH" != "$VISIONS_DIR"* ]]; then
+    SYMLINK_PATH="$VISIONS_DIR/$VISION_FILE.md"
+    if [[ ! -f "$SYMLINK_PATH" ]]; then
+        # Create relative symlink from .claude/visions/ to project root
+        RELATIVE_PATH=$(realpath --relative-to="$VISIONS_DIR" "$VISION_PATH")
+        ln -sf "$RELATIVE_PATH" "$SYMLINK_PATH"
+        echo "🔗 Created tracking symlink at: .claude/visions/$(basename "$SYMLINK_PATH")"
+    fi
+fi
 
 # Offer to create GitHub issue
 echo ""
